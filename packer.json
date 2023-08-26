@@ -1,0 +1,41 @@
+{
+    "_comment": "Creating ansble admin user copying ssh key",
+    "variables": {
+        "region":  "",
+        "source_ami": "",
+        "instance_type": "",
+        "vpc_id": "",
+        "subnet_id": ""
+    },
+    "_comment1": "Packer build -var \"aws_secret_key=foo\" packer.json",
+    "_comment2": "packer build -var-file packer-vars.json packer.json",
+    "builders": [
+        {
+            "type": "amazon-ebs",
+            "region": "{{user `region`}}",
+            "source_ami": "{{user `source_ami`}}",
+            "instance_type": "{{user `instance_type`}}",
+            "ssh_username": "ubuntu",
+            "ami_name": "HSK-{{isotime | clean_resource_name}}",
+            "vpc_id": "{{user `vpc_id`}}",
+            "subnet_id": "{{user `subnet_id`}}",
+            "tags": {
+                "Name": "HSK-{{isotime | clean_resource_name}}"
+            }
+        }
+    ],
+    "provisioners": [
+        {
+            "type": "shell",
+            "inline": [
+                "sudo useradd -m ansibleadmin --shell /bin/bash",
+                "sudo mkdir -p /home/ansibleadmin/.ssh",
+                "sudo chown -R ansibleadmin /home/ansibleadmin/",
+                "sudo touch /home/ansibleadmin/.ssh/authorized_keys",
+                "sudo usermod -aG sudo ansibleadmin",
+                "echo 'ansibleadmin ALL=(ALL) NOPASSWD: ALL' | sudo tee -a /etc/sudoers",
+                "echo 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCXNBf2uYbUByJMZR/WO7aSkYudwlJSOf10rU4ybbnJw9uE221cGiD6UawF+hIn9mZ7d84IhEeMhAVugtfLrqUf1s8hTSsjE3AQleKAHsRhCaPtA2mu5Ldcdlun6yM83IEtf8H4yAVHjDA1zCUiW/Zun+ESZhO2RF41Tqx6qaau+YjABOwqzzfGI1yV7MPmcz8UxGuNBsW31araR7qCQGTr9wFfSDHCIvgrd/EGPNoEwDkgnjmmItaMzGxKGXkbKnZaVclB5gc7rTiZlFtOVhyWvinzRO1hziPlutuSUoiOG+PHGBh66CgGTtjwRQouqutBeUh7DRXFwNiOu8wUpa0r' | sudo tee /home/ansibleadmin/.ssh/authorized_keys"
+            ]
+        }
+    ]
+}
